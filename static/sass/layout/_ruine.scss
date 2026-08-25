@@ -1,0 +1,119 @@
+.ruine {
+  color: rgb(93,109,126);
+  font-size: 11px;
+  font-weight: 500;
+  margin-bottom: 5px;
+
+  &.container {
+    display: grid;
+    justify-content: center;
+  }
+
+  &.ruine-icon.sprite {
+    display: block;
+    height: 32px;
+    width: 32px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  &.img.sprite {
+    height: 64px;
+    width: 64px;
+    border-radius: 32px;
+    border: 2px solid rgb(29, 139, 240);
+    display: none;
+  }
+
+  &.info {
+
+    &.last-modified:before {
+      content: '\f040';
+      display: inline-block;
+      font-family: FontAwesome;
+      height: 16px;
+      width: 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    &.last-scanned:before {
+      content: '\f002';
+      display: inline-block;
+      font-family: FontAwesome;
+      height: 16px;
+      width: 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    &.navigate:before {
+      content: '\f018';
+      display: inline-block;
+      font-family: FontAwesome;
+      height: 16px;
+      width: 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+  }
+
+  &.explorers {
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  &.explorer {
+    display: inline-block;
+    margin-left: 1px;
+
+    &.name {
+      font-size: 10px;
+      font-weight: 500;
+      text-decoration: none;
+      text-align: center;
+      margin-bottom: 0px;
+      vertical-align: middle;
+    }
+
+    &.sprite {
+      display: block;
+      height: 32px;
+      width: 32px;
+      margin-left: auto;
+      margin-right: auto;
+      margin-bottom: 5px;
+    }
+  }
+
+  &.name {
+    font-size: 14px;
+    font-weight: 900;
+    margin-bottom: 5px;
+    text-decoration: underline;
+    text-align: center;
+    color: rgb(54,198,255);
+  }
+
+}
+
+.ruine-expire {
+  color: rgb(249,53,133);
+  font-size: 14px;
+  font-weight: 900;
+  text-align: center;
+
+  &:before {
+    color: rgb(93,109,126);
+    content: '\f017';
+    display: inline-block;
+    font-family: FontAwesome;
+    height: 16px;
+    width: 16px;
+    text-align: center;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+a.ruine:link {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgb(54,198,255);
+}

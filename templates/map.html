@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="{{lang}}">
+  <head>
+    <meta charset="utf-8">
+
+    <title>{{mapname}}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="MerchantMap">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#3b3b3b">
+    <!-- Fav- & Apple-Touch-Icons -->
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/appicons/favicon.ico').lstrip('/') }}" type="image/x-icon">
+    <!-- non-retina iPhone pre iOS 7 -->
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/appicons/114x114.png').lstrip('/') }}" sizes="57x57">
+    <!-- non-retina iPad pre iOS 7 -->
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/appicons/144x144.png').lstrip('/') }}" sizes="72x72">
+    <!-- non-retina iPad iOS 7 -->
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/appicons/152x152.png').lstrip('/') }}" sizes="76x76">
+    <!-- retina iPhone pre iOS 7 -->
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/appicons/114x114.png').lstrip('/') }}" sizes="114x114">
+    <!-- retina iPhone iOS 7 -->
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/appicons/120x120.png').lstrip('/') }}" sizes="120x120">
+    <!-- retina iPad pre iOS 7 -->
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/appicons/144x144.png').lstrip('/') }}" sizes="144x144">
+    <!-- retina iPad iOS 7 -->
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/appicons/152x152.png').lstrip('/') }}" sizes="152x152">
+    <!-- retina iPhone 6 iOS 7 -->
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/appicons/180x180.png').lstrip('/') }}" sizes="180x180">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dist/css/app.min.css').lstrip('/') }}">
+    <!-- CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.0/jquery-ui.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.12/css/jquery.dataTables.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.css">
+    <!-- Custom CSS code-->
+      {% if show.custom_css %}
+    <link rel="stylesheet" type="text/css" href="static/css/custom.css">
+      {% endif %}
+  </head>
+  <body id="top" class="mapPage">
+    <div class="wrapper">
+      <!-- Header -->
+      <header id="header">
+        <a href="#nav"><span class="label">Options</span></a>
+        <h1><a href=".{{full_path}}">{{mapname}}<img class='merchant icon' src='static/images/merchant.png'></a></h1>
+      </header>
+      <!-- NAV -->
+      <nav id="nav">
+        <div id="nav-accordion">
+          <h3><i class="fa fa-map-marker fa-fw"></i>Marker Settings</h3>
+          <div>
+            {% if show.accounts %}
+            <div class="form-control switch-container">
+              <h3>Accounts</h3>
+              <div class="onoffswitch">
+                <input id="accounts-switch" type="checkbox" name="accounts-switch" class="onoffswitch-checkbox" checked>
+                <label class="onoffswitch-label" for="accounts-switch">
+                <span class="switch-label" data-on="On" data-off="Off"></span>
+                <span class="switch-handle"></span>
+                </label>
+              </div>
+            </div>
+            {% endif %}
+
+            {% if show.locations %}
+            <div class="form-control switch-container">
+              <h3>Locations</h3>
+              <div class="onoffswitch">
+                <input id="locations-switch" type="checkbox" name="locations-switch" class="onoffswitch-checkbox" checked>
+                <label class="onoffswitch-label" for="locations-switch">
+                <span class="switch-label" data-on="On" data-off="Off"></span>
+                <span class="switch-handle"></span>
+                </label>
+              </div>
+            </div>
+            {% endif %}
+
+            <div class="form-control switch-container">
+              <h3>Scanned Locations</h3>
+              <div class="onoffswitch">
+                <input id="scanned-switch" type="checkbox" name="scanned-switch" class="onoffswitch-checkbox">
+                <label class="onoffswitch-label" for="scanned-switch">
+                <span class="switch-label" data-on="On" data-off="Off"></span>
+                <span class="switch-handle"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <h3><i class="fa fa-location-arrow fa-fw"></i>Location &amp; Search Settings</h3>
+
+          <div>
+            <div class="form-control switch-container" >
+              <h3>Start map at my position</h3>
+              <div class="onoffswitch">
+                <input id="start-at-user-location-switch" type="checkbox" name="start-at-user-location-switch" class="onoffswitch-checkbox" checked/>
+                <label class="onoffswitch-label" for="start-at-user-location-switch">
+                <span class="switch-label" data-on="On" data-off="Off"></span>
+                <span class="switch-handle"></span>
+                </label>
+              </div>
+            </div>
+            <div class="form-control switch-container">
+              <h3>Follow me</h3>
+              <div class="onoffswitch">
+                <input id="follow-my-location-switch" type="checkbox" name="follow-my-location-switch" class="onoffswitch-checkbox" checked/>
+                <label class="onoffswitch-label" for="follow-my-location-switch">
+                <span class="switch-label" data-on="On" data-off="Off"></span>
+                <span class="switch-handle"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <h3><i class="fa fa-map-o fa-fw"></i>Style Settings</h3>
+          <div>
+            <div class="form-control switch-container">
+              <h3>Map Style</h3>
+              <select id="map-style"></select>
+            </div>
+            <div class="form-control switch-container">
+              <h3>Map Service Provider</h3>
+              <select name="map-service-provider" id="map-service-provider">
+                <option value="googlemaps">Google Maps</option>
+                <option value="applemaps">Apple Maps</option>
+              </select>
+            </div>
+            <div class="form-control switch-container">
+              <h3>Icon Size</h3>
+              <select name="merchant-icon-size" id="merchant-icon-size">
+                <option value="-8">Small</option>
+                <option value="0">Normal</option>
+                <option value="10">Large</option>
+                <option value="20">X-Large</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      <div>
+        <center><button class="settings" onclick="confirm('Are you sure you want to reset settings to default values?') ? (localStorage.clear(), window.location.reload()) : false"><i class="fa fa-refresh fa-fw"></i>Reset Settings</button></center>
+      </div>
+      </nav>
+      <nav id="account-details">
+        <center><h1>Loading...</h1></center>
+      </nav>
+      <nav id="location-details">
+        <center><h1>Loading...</h1></center>
+      </nav>
+      <div id="map"></div>
+    </div>
+    <!-- Load JS libs before custom scripts. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment-with-locales.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/push.js/1.0.4/push.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/randomcolor/0.4.4/randomColor.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsts/1.5.0/jsts.min.js"></script>
+    <script>
+      var centerLat = {{lat}};
+      var centerLng = {{lng}};
+      var showConfig = {{show|tojson|safe}};
+    </script>
+    <script src="{{ url_for('static', filename='dist/js/vendor/markerclusterer.min.js').lstrip('/') }}"></script>
+    <script src="{{ url_for('static', filename='dist/js/app.min.js').lstrip('/') }}"></script>
+    <script src="{{ url_for('static', filename='dist/js/map.common.min.js').lstrip('/') }}"></script>
+    <!-- Load custom JS before map.js so it can change Store defaults. -->
+      {% if show.custom_js %}
+    <script src="{{ url_for('static', filename='dist/js/custom.min.js').lstrip('/') }}"></script>
+      {% endif %}
+    <script src="{{ url_for('static', filename='dist/js/map.min.js').lstrip('/') }}"></script>
+    <script defer src="https://maps.googleapis.com/maps/api/js?key={{ gmaps_key }}&amp;callback=initMap&amp;libraries=places,geometry"></script>
+    <script defer src="{{ url_for('static', filename='dist/js/label.min.js').lstrip('/') }}"></script>
+  </body>
+</html>

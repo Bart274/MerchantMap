@@ -1,0 +1,10 @@
+{
+  "google": {
+    "name": "Default Google Marker",
+    "icon": null
+  },
+  "none": {
+    "name": "Hidden",
+    "icon": "static/images/markers/transparent.png"
+  },
+}

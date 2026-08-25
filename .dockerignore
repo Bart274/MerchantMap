@@ -1,0 +1,12 @@
+.git
+.github
+.gitignore
+credentials.example.json
+node_modules
+Easy\ Setup
+merchant.db
+core
+merchant.db-*
+docs
+_build
+_build_html

@@ -1,0 +1,76 @@
+# DO NOT USE NOTEPAD TO EDIT CONFIG FILES! USE NOTEPAD++ INSTEAD!
+# Uncomment a line when you want to change its default value (Remove # at the beginning)
+# Please ensure to leave a space after the colon if a value is needed ("example-setting" "example-setting-with: value")
+# At least one account with "username", "password" as well as "location" and "gmaps-key" are required
+# When your configuration is done, rename this file by removing the ".example" extension
+# A different config-files can be included directly in processes by "--config-file" or "-cf" and path
+
+# Required settings
+###################
+
+#gmaps-key:                     # Your Google Maps API key
+
+
+# Common settings
+#################
+
+#host:                          # Address to listen on (default='127.0.0.1')
+#port:                          # Port to listen on (default=5000)
+#external-hostname:             # Hostname used for external requests.
+                                # Must be accessible from the exterior. (default="http://127.0.0.1:5000")
+#location:                      # Location, can be an address or coordinates.
+
+
+# Database settings
+###################
+
+#db-host:                       # Required for mysql ()
+#db-name:                       # Required for mysql
+#db-user:                       # Required for mysql
+#db-pass:                       # Required for mysql
+#db-port:                       # Required for mysql (default=3306)
+#db-threads:                    # Number of db threads; increase if the db queue falls behind. (default=1)
+
+
+# Search settings
+#################
+
+#china                          # Coordinates transformer for China.
+
+
+# Webserver settings
+####################
+
+#locale:                        # Merchant translation
+#cors                           # Enable CORS on web server.
+#ssl-certificate:               # Path to ssl certificate
+#ssl-privatekey:                # Path to ssl private key
+#encrypt-lib:                   # Path to encrypt lib to be used instead of the shipped ones.
+#display-in-console             # Display Found Data in Console.
+#disable-blacklist              # Disable the global anti-scraper IP blacklist.
+#mapname:                       # Name for the map in the HTML view, default MerchantMap
+
+
+# Proxy settings
+################
+
+#proxy:                         # Proxy URL e.g. socks5://127.0.0.1:9050 or a list of proxies
+                                # e.g. [socks5://127.0.0.1:9050,socks5://127.0.0.1:9050]
+#proxy-skip-check               # Disable checking of proxies before start.
+#proxy-test-timeout:            # Timeout before proceeding with next proxy while checking if the proxy works. (default=5)
+#proxy-test-retries:            # Number of times to retry sending proxy test requests on failure. (default=0)
+#proxy-test-backoff-factor:     # Factor (in seconds) by which the delay until next retry will increase. (default=0.25)
+#proxy-test-concurrency:        # Async requests pool size. (default=0 for automatic optimal sizing)
+#proxy-display:                 # Used with -ps, full = display complete proxy address. Index = displays just the index for that proxy. (default='index')
+#proxy-file:                    # Load proxy list from text file (one proxy per line), overrides #proxy.
+#proxy-refresh:                 # Period of proxy file reloading, in seconds. Works only with proxy-file. (default=0, 0 to disable)
+#proxy-rotation:                # Enable proxy rotation with account changing for search threads (none/round/random). (default='none')
+
+
+# Misc
+######
+
+#verbosity                      # Show debug messages from MerchantMap. Values are 1,2,3 (default=0)
+#no-file-logs                   # Disables logging to files except for access.log. (default=False)
+#log-path:                      # Defines the path logs are saved at. (default=logs/)
+#log-filename:                  # Defines the log filename to be saved. The default generates yyyymmdd_HHMM_statusname.log. (default=%Y%m%d_%H%M_<SN>)

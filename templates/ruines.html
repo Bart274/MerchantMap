@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+
+        <title>{{mapname}} - Ruines</title>
+
+        <!-- Fav- & Apple-Touch-Icons -->
+        <!-- Favicon -->
+        <link rel="shortcut icon" href="{{ url_for('static', filename='images/appicons/settlements_favicon.ico').lstrip('/') }}" type="image/x-icon">
+        <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/appicons/settlements_favicon.png').lstrip('/') }}">
+        <!-- non-retina iPhone pre iOS 7 -->
+        <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/appicons/settlements_114x114.png').lstrip('/') }}" sizes="57x57">
+        <!-- non-retina iPad pre iOS 7 -->
+        <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/appicons/settlements_144x144.png').lstrip('/') }}" sizes="72x72">
+        <!-- non-retina iPad iOS 7 -->
+        <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/appicons/settlements_152x152.png').lstrip('/') }}" sizes="76x76">
+        <!-- retina iPhone pre iOS 7 -->
+        <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/appicons/settlements_114x114.png').lstrip('/') }}" sizes="114x114">
+        <!-- retina iPhone iOS 7 -->
+        <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/appicons/settlements_120x120.png').lstrip('/') }}" sizes="120x120">
+        <!-- retina iPad pre iOS 7 -->
+        <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/appicons/settlements_144x144.png').lstrip('/') }}" sizes="144x144">
+        <!-- retina iPad iOS 7 -->
+        <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/appicons/settlements_152x152.png').lstrip('/') }}" sizes="152x152">
+        <!-- retina iPhone 6 iOS 7 -->
+        <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/appicons/settlements_180x180.png').lstrip('/') }}" sizes="180x180">
+        <link rel="stylesheet" href="{{ url_for('static', filename='dist/css/ruines.min.css').lstrip('/') }}">
+
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <meta name="apple-mobile-web-app-title" content="{{mapname}} Ruines">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="theme-color" content="#3b3b3b">
+    </head>
+    <body class="ruinesPage">
+        <div align="center">
+            <span id="resultcount">0 Ruines found.</span>
+            <div id="loader_placeholder">
+                <div class="loader"></div>
+            </div>
+        </div>
+
+        <table id="myTable">
+            <thead>
+                <tr class="header">
+                    <th>Ruine Name</th>
+                    <th>Gentle Done</th>
+                    <th>Last Scanned</th>
+                    <th>District</th>
+                    <th>Distance</th>
+                    <th>Location</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+        <script>
+          var geofencenames = {{'`' + geofences + '`'}};
+        </script>
+        <!-- Load JS libs before custom scripts. -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.17.1/moment.min.js"></script>
+        <script src="{{ url_for('static', filename='dist/js/ruines.min.js').lstrip('/') }}"></script>
+    </body>
+</html>
+
