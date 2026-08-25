@@ -26,7 +26,18 @@ def _no_referrer(request):
     return not request.referrer
 
 
+# iPokeGo.
+def _iPokeGo(request):
+    user_agent = request.headers.get("User-Agent", False)
+
+    if not user_agent:
+        return False
+
+    return "ipokego" in user_agent.lower()
+
+
 # Fingerprints dict for easy scoping on imports.
 fingerprints = {
     "no_referrer": _no_referrer,
+    "iPokeGo": _iPokeGo,
 }

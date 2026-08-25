@@ -1,0 +1,5 @@
+minimumReleaseAgeExclude:
+  - eslint@10.9.1
+
+allowBuilds:
+  '@parcel/watcher': true

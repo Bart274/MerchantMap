@@ -20,6 +20,7 @@ var timestamp
 var buffer = []
 
 var map
+var MapProvider
 var markerCluster = window.markerCluster = {}
 var rawDataIsLoading = false
 var searchMarker
@@ -48,6 +49,203 @@ var dataIsBeingRemovedFromMap = false
 // Functions
 //
 
+function latOf(point) {
+    return typeof point.lat === 'function' ? point.lat() : point.lat
+}
+
+function lngOf(point) {
+    return typeof point.lng === 'function' ? point.lng() : point.lng
+}
+
+function leafletOverlaySetMap(value) {
+    if (value) {
+        if (!this._onMap) {
+            this.addTo(map)
+            this._onMap = true
+        }
+    } else if (this._onMap) {
+        map.removeLayer(this)
+        this._onMap = false
+    }
+}
+
+function leafletOverlayGetMap() {
+    return this._onMap ? map : null
+}
+
+function leafletMarkerSetIcon(opts) {
+    var size = opts.scaledSize
+    L.Marker.prototype.setIcon.call(this, L.icon({
+        iconUrl: opts.url,
+        iconSize: [size.width, size.height],
+        iconAnchor: [size.width / 2, size.height / 2]
+    }))
+}
+
+function leafletMarkerSetPosition(latlng) {
+    this.setLatLng(latlng)
+}
+
+function leafletMarkerGetPosition() {
+    return this.getLatLng()
+}
+
+function leafletMarkerSetZIndex(z) {
+    this.setZIndexOffset(z * 1000)
+}
+
+function leafletMarkerAddListener(event, handler) {
+    var eventMap = {click: 'click', mouseover: 'mouseover', mouseout: 'mouseout'}
+    this.on(eventMap[event] || event, handler)
+}
+
+function createLeafletMarker(lat, lng) {
+    var marker = L.marker([lat, lng])
+    marker._onMap = false
+
+    marker.setIcon = leafletMarkerSetIcon
+    marker.setPosition = leafletMarkerSetPosition
+    marker.getPosition = leafletMarkerGetPosition
+    marker.setZIndex = leafletMarkerSetZIndex
+    marker.setMap = leafletOverlaySetMap
+    marker.getMap = leafletOverlayGetMap
+    marker.addListener = leafletMarkerAddListener
+
+    marker.infoWindow = createLeafletInfoWindow(marker)
+
+    return marker
+}
+
+function leafletInfoWindowSetContent(html) {
+    this.marker.setPopupContent(html)
+}
+
+function leafletInfoWindowOpen() {
+    this.marker.openPopup()
+}
+
+function leafletInfoWindowClose() {
+    this.marker.closePopup()
+}
+
+function leafletInfoWindowOnCloseClick(handler) {
+    this.marker.on('popupclose', handler)
+}
+
+function createLeafletInfoWindow(marker) {
+    marker.bindPopup('', {autoPan: false})
+    return {
+        marker: marker,
+        setContent: leafletInfoWindowSetContent,
+        open: leafletInfoWindowOpen,
+        close: leafletInfoWindowClose,
+        onCloseClick: leafletInfoWindowOnCloseClick
+    }
+}
+
+function leafletCircleSetOptions(opts) {
+    this.setStyle({color: opts.fillColor, fillColor: opts.fillColor})
+}
+
+function createLeafletCircle(lat, lng, options) {
+    var circle = L.circle([lat, lng], {
+        radius: options.radius,
+        interactive: false,
+        color: options.fillColor,
+        weight: 1,
+        opacity: 0.5,
+        fillColor: options.fillColor,
+        fillOpacity: 0.1
+    })
+    circle._onMap = false
+
+    circle.setMap = leafletOverlaySetMap
+    circle.getMap = leafletOverlayGetMap
+    circle.setOptions = leafletCircleSetOptions
+
+    return circle
+}
+
+function buildLeafletMapProvider() {
+    return {
+        createMarker: function (lat, lng) {
+            var marker = createLeafletMarker(lat, lng)
+            marker.setMap(map)
+            return marker
+        },
+        createCircle: function (lat, lng, options) {
+            var circle = createLeafletCircle(lat, lng, options)
+            circle.setMap(map)
+            return circle
+        },
+        makeSize: function (width, height) {
+            return {width: width, height: height}
+        },
+        latLng: function (lat, lng) {
+            return L.latLng(lat, lng)
+        },
+        setView: function (lat, lng, zoom) {
+            map.setView([lat, lng], zoom || map.getZoom())
+        },
+        addControl: function (element) {
+            var LocationControl = L.Control.extend({
+                options: {position: 'bottomright'},
+                onAdd: function () {
+                    return element
+                }
+            })
+            map.addControl(new LocationControl())
+        }
+    }
+}
+
+function buildGoogleMapProvider() {
+    return {
+        createMarker: function (lat, lng) {
+            var marker = new google.maps.Marker({
+                position: {lat: lat, lng: lng},
+                map: map
+            })
+            marker.infoWindow = new google.maps.InfoWindow({
+                content: '',
+                disableAutoPan: true
+            })
+            marker.infoWindow.onCloseClick = function (handler) {
+                google.maps.event.addListener(marker.infoWindow, 'closeclick', handler)
+            }
+            return marker
+        },
+        createCircle: function (lat, lng, options) {
+            return new google.maps.Circle({
+                map: map,
+                clickable: false,
+                center: new google.maps.LatLng(lat, lng),
+                radius: options.radius,
+                fillColor: options.fillColor,
+                fillOpacity: 0.1,
+                strokeWeight: 1,
+                strokeOpacity: 0.5
+            })
+        },
+        makeSize: function (width, height) {
+            return new google.maps.Size(width, height)
+        },
+        latLng: function (lat, lng) {
+            return new google.maps.LatLng(lat, lng)
+        },
+        setView: function (lat, lng, zoom) {
+            map.setCenter(new google.maps.LatLng(lat, lng))
+            if (zoom) {
+                map.setZoom(zoom)
+            }
+        },
+        addControl: function (element) {
+            element.index = 1
+            map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(element)
+        }
+    }
+}
+
 function getIconSizeBasedOnZoom(iconSize){
     var defaultZoom = 17
 
@@ -74,54 +272,101 @@ function createServiceWorkerReceiver() {
 }
 
 function initMap() { // eslint-disable-line no-unused-vars
-    map = new google.maps.Map(document.getElementById('map'), {
-        center: {
-            lat: Number(getParameterByName('lat')) || centerLat,
-            lng: Number(getParameterByName('lon')) || centerLng
-        },
-        zoom: Number(getParameterByName('zoom')) || Store.get('zoomLevel'),
-        gestureHandling: 'greedy',
-        fullscreenControl: true,
-        streetViewControl: false,
-        mapTypeControl: false,
-        clickableIcons: false,
-        mapTypeControlOptions: {
-            style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
-            position: google.maps.ControlPosition.RIGHT_TOP,
-            mapTypeIds: [
-                google.maps.MapTypeId.ROADMAP,
-                google.maps.MapTypeId.SATELLITE,
-                google.maps.MapTypeId.HYBRID,
-                'style_merchant',
-            ]
-        }
-    })
+    var initialLat = Number(getParameterByName('lat')) || centerLat
+    var initialLng = Number(getParameterByName('lon')) || centerLng
+    var initialZoom = Number(getParameterByName('zoom')) || Store.get('zoomLevel')
 
-    // Enable clustering.
-    var clusterOptions = {
-        imagePath: 'static/images/cluster/m',
-        maxZoom: Store.get('maxClusterZoomLevel'),
-        zoomOnClick: Store.get('clusterZoomOnClick'),
-        gridSize: Store.get('clusterGridSize')
+    if (useLeaflet()) {
+        map = L.map('map', {
+            center: [initialLat, initialLng],
+            zoom: initialZoom
+        })
+
+        map._activeTileLayers = []
+        map._activeMapTypeId = null
+        map.setMapTypeId = function (id) {
+            if (id === this._activeMapTypeId) {
+                return
+            }
+            this._activeMapTypeId = id
+
+            var self = this
+            this._activeTileLayers.forEach(function (layer) {
+                self.removeLayer(layer)
+            })
+            this._activeTileLayers = []
+
+            var style = leafletTileStyles[id] || leafletTileStyles['style_merchant']
+            style.layers.forEach(function (url) {
+                var layer = L.tileLayer(url, {attribution: style.attribution, maxZoom: style.maxZoom})
+                layer.addTo(self)
+                self._activeTileLayers.push(layer)
+            })
+        }
+        map.addListener = function (googleEventName, handler) {
+            var eventMap = {idle: 'moveend', zoom_changed: 'zoomend', dragend: 'dragend'}
+            var leafletEvent = eventMap[googleEventName]
+            if (leafletEvent) {
+                this.on(leafletEvent, handler)
+            }
+        }
+
+        markerCluster = {repaint: function () {}, redraw: function () {}}
+
+        MapProvider = buildLeafletMapProvider()
+        map.setMapTypeId(Store.get('map_style'))
+    } else {
+        map = new google.maps.Map(document.getElementById('map'), {
+            center: {
+                lat: initialLat,
+                lng: initialLng
+            },
+            zoom: initialZoom,
+            gestureHandling: 'greedy',
+            fullscreenControl: true,
+            streetViewControl: false,
+            mapTypeControl: false,
+            clickableIcons: false,
+            mapTypeControlOptions: {
+                style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+                position: google.maps.ControlPosition.RIGHT_TOP,
+                mapTypeIds: [
+                    google.maps.MapTypeId.ROADMAP,
+                    google.maps.MapTypeId.SATELLITE,
+                    google.maps.MapTypeId.HYBRID,
+                    'style_merchant',
+                ]
+            }
+        })
+
+        // Enable clustering.
+        var clusterOptions = {
+            imagePath: 'static/images/cluster/m',
+            maxZoom: Store.get('maxClusterZoomLevel'),
+            zoomOnClick: Store.get('clusterZoomOnClick'),
+            gridSize: Store.get('clusterGridSize')
+        }
+
+        markerCluster = new MarkerClusterer(map, [], clusterOptions)
+
+        var styleMerchant = new google.maps.StyledMapType(merchantStyle, {
+            name: 'Merchant Map'
+        })
+        map.mapTypes.set('style_merchant', styleMerchant)
+
+        map.addListener('maptypeid_changed', function (s) {
+            Store.set('map_style', this.mapTypeId)
+        })
+
+        MapProvider = buildGoogleMapProvider()
+        map.setMapTypeId(Store.get('map_style'))
     }
 
-    markerCluster = new MarkerClusterer(map, [], clusterOptions)
-
-    var styleMerchant = new google.maps.StyledMapType(merchantStyle, {
-        name: 'Merchant Map'
-    })
-    map.mapTypes.set('style_merchant', styleMerchant)
-
-    map.addListener('maptypeid_changed', function (s) {
-        Store.set('map_style', this.mapTypeId)
-    })
-
-    map.setMapTypeId(Store.get('map_style'))
     map.addListener('idle', updateMap)
 
     map.addListener('zoom_changed', function () {
         if (storeZoom === true) {
-            Store.set('zoomLevel', this.getZoom())
+            Store.set('zoomLevel', map.getZoom())
         } else {
             storeZoom = true
         }
@@ -145,6 +390,12 @@ function initMap() { // eslint-disable-line no-unused-vars
 
     if (Push._agents.chrome.isSupported()) {
         createServiceWorkerReceiver()
+    }
+}
+
+function bootstrapMapProvider() { // eslint-disable-line no-unused-vars
+    if (useLeaflet()) {
+        initMap()
     }
 }
 
@@ -323,7 +574,7 @@ function updateAccountMarker(item, marker) {
     markersize = getIconSizeBasedOnZoom(markersize)
     marker.setIcon({
         url: markerImage,
-        scaledSize: new google.maps.Size(markersize, markersize)
+        scaledSize: MapProvider.makeSize(markersize, markersize)
     })
 
     marker.setZIndex(2)
@@ -373,7 +624,7 @@ function updateLocationMarker(item, marker) {
     markersize = getIconSizeBasedOnZoom(markersize)
     marker.setIcon({
         url: markerImage,
-        scaledSize: new google.maps.Size(markersize, markersize)
+        scaledSize: MapProvider.makeSize(markersize, markersize)
     })
 
     marker.setZIndex(2)
@@ -385,17 +636,7 @@ function updateLocationMarker(item, marker) {
 }
 
 function setupAccountMarker(item) {
-    var marker = new google.maps.Marker({
-        position: {
-            lat: item['latitude'],
-            lng: item['longitude']
-        },
-        map: map,
-    })
-    marker.infoWindow = new google.maps.InfoWindow({
-        content: '',
-        disableAutoPan: true
-    })
+    var marker = MapProvider.createMarker(item['latitude'], item['longitude'])
     updateAccountMarker(item, marker)
     if (Store.get('useAccountSidebar')) {
         marker.addListener('click', function () {
@@ -408,7 +649,7 @@ function setupAccountMarker(item) {
             }
         })
 
-        google.maps.event.addListener(marker.infoWindow, 'closeclick', function () {
+        marker.infoWindow.onCloseClick(function () {
             marker.persist = null
         })
 
@@ -432,17 +673,7 @@ function setupAccountMarker(item) {
 }
 
 function setupLocationMarker(item) {
-    var marker = new google.maps.Marker({
-        position: {
-            lat: item['latitude'],
-            lng: item['longitude']
-        },
-        map: map,
-    })
-    marker.infoWindow = new google.maps.InfoWindow({
-        content: '',
-        disableAutoPan: true
-    })
+    var marker = MapProvider.createMarker(item['latitude'], item['longitude'])
     updateLocationMarker(item, marker)
     if (Store.get('useLocationSidebar')) {
         marker.addListener('click', function () {
@@ -455,7 +686,7 @@ function setupLocationMarker(item) {
             }
         })
 
-        google.maps.event.addListener(marker.infoWindow, 'closeclick', function () {
+        marker.infoWindow.onCloseClick(function () {
             marker.persist = null
         })
 
@@ -623,7 +854,7 @@ function addListeners(marker) {
         }
     })
 
-    google.maps.event.addListener(marker.infoWindow, 'closeclick', function () {
+    marker.infoWindow.onCloseClick(function () {
         marker.persist = null
     })
 
@@ -696,10 +927,10 @@ function loadRawData() {
     var bounds = map.getBounds()
     var swPoint = bounds.getSouthWest()
     var nePoint = bounds.getNorthEast()
-    var swLat = swPoint.lat()
-    var swLng = swPoint.lng()
-    var neLat = nePoint.lat()
-    var neLng = nePoint.lng()
+    var swLat = latOf(swPoint)
+    var swLng = lngOf(swPoint)
+    var neLat = latOf(nePoint)
+    var neLng = lngOf(nePoint)
 
     var playeridparam = getParameterByName('playerid')
 
@@ -812,22 +1043,10 @@ function updateLocations() {
 }
 
 function setupScannedMarker(item) {
-    var circleCenter = new google.maps.LatLng(item['latitude'], item['longitude'])
-
-    var circleRadius = item['icon_size']
-
-    var marker = new google.maps.Circle({
-        map: map,
-        clickable: false,
-        center: circleCenter,
-        radius: circleRadius, // metres
-        fillColor: getColorByDate(item['last_modified']),
-        fillOpacity: 0.1,
-        strokeWeight: 1,
-        strokeOpacity: 0.5
+    return MapProvider.createCircle(item['latitude'], item['longitude'], {
+        radius: item['icon_size'], // metres
+        fillColor: getColorByDate(item['last_modified'])
     })
-
-    return marker
 }
 
 function processScanned(i, item) {
@@ -877,7 +1096,7 @@ function getColorByDate(value) {
 
 function getMapCenter(){
     var loc = map.getCenter()
-    return {lat : loc.lat(), lng : loc.lng()}
+    return {lat : latOf(loc), lng : lngOf(loc)}
 }
 
 function updateMap() {
@@ -968,10 +1187,9 @@ function createMyLocationButton() {
         centerMapOnLocation()
     })
 
-    locationContainer.index = 1
-    map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(locationContainer)
+    MapProvider.addControl(locationContainer)
 
-    google.maps.event.addListener(map, 'dragend', function () {
+    map.addListener('dragend', function () {
         var currentLocation = document.getElementById('current-location')
         currentLocation.style.backgroundPosition = '0px 0px'
     })
@@ -990,9 +1208,7 @@ function centerMapOnLocation() {
     }, 500)
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function (position) {
-            var latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude)
-
-            map.setCenter(latlng)
+            MapProvider.setView(position.coords.latitude, position.coords.longitude)
             Store.set('followMyLocationPosition', {
                 lat: position.coords.latitude,
                 lng: position.coords.longitude
@@ -1007,14 +1223,11 @@ function centerMapOnLocation() {
 }
 
 function centerMap(lat, lng, zoom) {
-    var loc = new google.maps.LatLng(lat, lng)
-
-    map.setCenter(loc)
-
     if (zoom) {
         storeZoom = false
-        map.setZoom(zoom)
     }
+
+    MapProvider.setView(lat, lng, zoom)
 }
 
 function i8ln(word) {
@@ -1045,7 +1258,7 @@ function updateGeoLocation() {
         navigator.geolocation.getCurrentPosition(function (position) {
             var lat = position.coords.latitude
             var lng = position.coords.longitude
-            var center = new google.maps.LatLng(lat, lng)
+            var center = MapProvider.latLng(lat, lng)
 
             if (Store.get('geoLocate')) {
                 // The search function makes any small movements cause a loop. Need to increase resolution.
@@ -1208,6 +1421,8 @@ $(function () {
 })
 
 $(function () {
+    bootstrapMapProvider()
+
     moment.locale(language)
     if (Store.get('startAtUserLocation') && getParameterByName('lat') == null && getParameterByName('lon') == null) {
         centerMapOnLocation()
