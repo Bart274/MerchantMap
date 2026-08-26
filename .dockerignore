@@ -10,3 +10,8 @@ merchant.db-*
 docs
 _build
 _build_html
+.env
+__pycache__
+*.pyc
+venv
+static/dist

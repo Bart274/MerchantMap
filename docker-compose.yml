@@ -1,0 +1,36 @@
+services:
+  app:
+    build: .
+    ports:
+      - "${MERCHANTMAP_HOST_PORT:-5050}:5000"
+    environment:
+      MERCHANTMAP_GMAPS_KEY: ${MERCHANTMAP_GMAPS_KEY:-}
+      MERCHANTMAP_MAP_PROVIDER: ${MERCHANTMAP_MAP_PROVIDER:-google}
+      MERCHANTMAP_LOCATION: ${MERCHANTMAP_LOCATION:?set MERCHANTMAP_LOCATION in .env}
+      MERCHANTMAP_DB_HOST: db
+      MERCHANTMAP_DB_NAME: ${MYSQL_DATABASE:?set MYSQL_DATABASE in .env}
+      MERCHANTMAP_DB_USER: ${MYSQL_USER:?set MYSQL_USER in .env}
+      MERCHANTMAP_DB_PASS: ${MYSQL_PASSWORD:?set MYSQL_PASSWORD in .env}
+      MERCHANTMAP_EXTERNAL_HOSTNAME: ${MERCHANTMAP_EXTERNAL_HOSTNAME:-http://127.0.0.1:5050}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: on-failure
+
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:?set MYSQL_DATABASE in .env}
+      MYSQL_USER: ${MYSQL_USER:?set MYSQL_USER in .env}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?set MYSQL_PASSWORD in .env}
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysql", "-h", "localhost", "-u${MYSQL_USER:?set MYSQL_USER in .env}", "-p${MYSQL_PASSWORD:?set MYSQL_PASSWORD in .env}", "${MYSQL_DATABASE:?set MYSQL_DATABASE in .env}", "-e", "SELECT 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  db-data:

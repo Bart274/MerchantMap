@@ -8,7 +8,7 @@
 # Required settings
 ###################
 
-#gmaps-key:                     # Your Google Maps API key
+#gmaps-key:                     # Your Google Maps API key. Required unless map-provider is 'leaflet'.
 
 
 # Common settings
@@ -49,6 +49,7 @@
 #display-in-console             # Display Found Data in Console.
 #disable-blacklist              # Disable the global anti-scraper IP blacklist.
 #mapname:                       # Name for the map in the HTML view, default MerchantMap
+#map-provider:                  # Which map renderer to serve: 'google' or 'leaflet' (free, no API key). (default='google')
 
 
 # Proxy settings

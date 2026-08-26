@@ -68,7 +68,7 @@ To contribute code to MerchantMap, it is heavily advised that you are knowledgea
 
 ### Styleguides
 
-MerchantMap follows and adheres to the [pep8 standards](https://www.python.org/dev/peps/pep-0008/) for Python code, and has established rules for JavaScript in the .eslintrc.json file in the project root. Automatic checks of these standards are performed when pull requests are opened, however you can save some time by running these checks on your local machine. 
+MerchantMap follows and adheres to the [pep8 standards](https://www.python.org/dev/peps/pep-0008/) for Python code, and has established rules for JavaScript in the eslint.config.js file in the project root. Automatic checks of these standards are performed when pull requests are opened, however you can save some time by running these checks on your local machine. 
 
 To check if your Python code conforms to PEP8, you can use the flake8 package (`pip install flake8`). After making changes, open a terminal in the project root and run `flake8 --statistics --show-source --disable-noqa`.
 

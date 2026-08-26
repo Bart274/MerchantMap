@@ -2,6 +2,7 @@ import sys
 import os
 import json
 import logging
+import re
 import time
 import socket
 import struct
@@ -22,6 +23,8 @@ from timezonefinder import TimezoneFinder
 
 log = logging.getLogger(__name__)
 tf = TimezoneFinder()
+
+LATLNG_PATTERN = re.compile(r"^(-?\d+\.\d+),?\s?(-?\d+\.\d+)$")
 
 
 def memoize(function):
@@ -72,7 +75,18 @@ def get_args():
         "-eh", "--external-hostname", help="Hostname used for external requests.", default="http://127.0.0.1:5000"
     )
     parser.add_argument("-c", "--china", help="Coordinates transformer for China.", action="store_true")
-    parser.add_argument("-k", "--gmaps-key", help="Google Maps Javascript API Key.", required=True)
+    parser.add_argument(
+        "-k",
+        "--gmaps-key",
+        help="Google Maps Javascript API Key. Required unless --map-provider "
+        "is 'leaflet'.",
+    )
+    parser.add_argument(
+        "--map-provider",
+        help="Which map renderer to serve the frontend with.",
+        choices=["google", "leaflet"],
+        default="google",
+    )
     parser.add_argument("-C", "--cors", help="Enable CORS on web server.", action="store_true", default=False)
     parser.add_argument(
         "-cd",
@@ -257,6 +271,18 @@ def get_args():
     if args.location is None:
         parser.print_usage()
         print((sys.argv[0] + ": error: arguments -l/--location is required."))
+        sys.exit(1)
+
+    is_address = not LATLNG_PATTERN.match(args.location)
+    needs_gmaps_key = args.map_provider == "google" or is_address
+    if not args.gmaps_key and needs_gmaps_key:
+        parser.print_usage()
+        print((
+            sys.argv[0]
+            + ": error: argument -k/--gmaps-key is required unless\n"
+            + "--map-provider is 'leaflet' and --location is given as\n"
+            + "'lat,lng' coordinates (geocoding an address still needs it)."
+        ))
         sys.exit(1)
 
     args.locales_dir = "static/dist/locales"

@@ -5,6 +5,7 @@
 *.sass-cache
 *.orig
 *.json
+.env
 config/*
 !config/config.ini.example
 static/dist/

@@ -2,11 +2,8 @@ import os
 import sys
 import logging
 import time
-import re
 import ssl
 import requests
-
-from distutils.version import StrictVersion
 
 from threading import Thread, Event
 from queue import Queue
@@ -14,7 +11,13 @@ from flask_cors import CORS
 import merchant.flask_cache_bust
 
 from merchant.app import MerchantApp
-from merchant.utils import get_args, now, log_resource_usage_loop, get_debug_dump_link
+from merchant.utils import (
+    get_args,
+    now,
+    log_resource_usage_loop,
+    get_debug_dump_link,
+    LATLNG_PATTERN,
+)
 
 from merchant.models import (
     init_database,
@@ -175,8 +178,7 @@ def get_pos_by_name(location_name, gmaps_key):
 
 def extract_coordinates(location, gmaps_key):
     # Use lat/lng directly if matches such a pattern.
-    prog = re.compile("^(-?\d+\.\d+),?\s?(-?\d+\.\d+)$")
-    res = prog.match(location)
+    res = LATLNG_PATTERN.match(location)
     if res:
         log.debug("Using coordinates from CLI directly")
         position = (float(res.group(1)), float(res.group(2)), 0)

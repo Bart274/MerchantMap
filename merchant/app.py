@@ -13,7 +13,7 @@ from flask import (
     send_from_directory,
     json,
 )
-from flask.json import JSONEncoder
+from flask.json.provider import DefaultJSONProvider
 from flask_compress import Compress
 from urllib.parse import urlparse
 
@@ -98,7 +98,7 @@ class MerchantApp(Flask):
         self.blacklist_keys = []
 
         # Routes
-        self.json_encoder = CustomJSONEncoder
+        self.json = CustomJSONProvider(self)
         self.route("/", methods=["GET"])(self.fullmap)
         self.route("/raw_data", methods=["GET"])(self.raw_data)
         self.route("/account_data", methods=["GET"])(self.get_accountdata)
@@ -352,6 +352,7 @@ class MerchantApp(Flask):
             lat=map_lat,
             lng=map_lng,
             gmaps_key=args.gmaps_key,
+            map_provider=args.map_provider,
             lang="en",
             show=visibility_flags,
             mapname=args.mapname,
@@ -604,9 +605,10 @@ class MerchantApp(Flask):
         return jsonify(location)
 
 
-class CustomJSONEncoder(JSONEncoder):
+class CustomJSONProvider(DefaultJSONProvider):
 
-    def default(self, obj):
+    @staticmethod
+    def default(obj):
         try:
             if isinstance(obj, datetime):
                 if obj.utcoffset() is not None:
@@ -618,4 +620,4 @@ class CustomJSONEncoder(JSONEncoder):
             pass
         else:
             return list(iterable)
-        return JSONEncoder.default(self, obj)
+        return DefaultJSONProvider.default(obj)
