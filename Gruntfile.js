@@ -76,7 +76,7 @@ module.exports = function (grunt) {
         minjson: {
             build: {
                 files: {
-                    'static/dist/data/building_type.min.json': 'static/data/building_type.json',
+                    'static/dist/data/occupier_type.min.json': 'static/data/occupier_type.json',
                     'static/dist/data/mapstyle.min.json': 'static/data/mapstyle.json',
                     'static/dist/data/searchmarkerstyle.min.json': 'static/data/searchmarkerstyle.json'
                 }

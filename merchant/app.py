@@ -519,10 +519,20 @@ class MerchantApp(Flask):
                 account_ids.append(uuid)
 
         if request.args.get("locations", "true") == "true" and not args.no_locations:
+            # Exclude ids of Occupation IDS that are hidden.
+            eids_locations = []
+            request_eids = request.args.get("eids_locations")
+            if request_eids:
+                eids_locations = {int(i) for i in request_eids.split(",")}
+
             if lastlocations != "true":
-                d["locations"] = Location.get_locations(sw_lat, sw_lng, ne_lat, ne_lng, playerid)
+                d["locations"] = Location.get_locations(
+                    sw_lat, sw_lng, ne_lat, ne_lng, playerid, exclude=eids_locations
+                )
             else:
-                d["locations"] = Location.get_locations(sw_lat, sw_lng, ne_lat, ne_lng, playerid, timestamp=timestamp)
+                d["locations"] = Location.get_locations(
+                    sw_lat, sw_lng, ne_lat, ne_lng, playerid, exclude=eids_locations, timestamp=timestamp
+                )
                 if new_area:
                     d["locations"].update(
                         Location.get_locations(
@@ -531,6 +541,7 @@ class MerchantApp(Flask):
                             ne_lat,
                             ne_lng,
                             playerid,
+                            exclude=eids_locations,
                             o_sw_lat=o_sw_lat,
                             o_sw_lng=o_sw_lng,
                             o_ne_lat=o_ne_lat,

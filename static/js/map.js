@@ -2,6 +2,7 @@
 // Global map.js variables
 //
 
+var $selectExcludeLocations
 var $selectStyle
 var $selectIconSize
 var $selectLocationIconMarker
@@ -9,6 +10,7 @@ var $switchAccountSidebar
 var $switchLocationSidebar
 
 const language = document.documentElement.lang === '' ? 'en' : document.documentElement.lang
+var idToOccupierType = {}
 var i8lnDictionary = {}
 var languageLookups = 0
 var languageLookupThreshold = 3
@@ -16,6 +18,7 @@ var languageLookupThreshold = 3
 var searchMarkerStyles
 
 var timestamp
+var excludedLocations = []
 
 var buffer = []
 
@@ -246,6 +249,12 @@ function buildGoogleMapProvider() {
     }
 }
 
+function excludeLocation(id) { // eslint-disable-line no-unused-vars
+    $selectExcludeLocations.val(
+        $selectExcludeLocations.val().concat(String(id))
+    ).trigger('change')
+}
+
 function getIconSizeBasedOnZoom(iconSize){
     var defaultZoom = 17
 
@@ -421,6 +430,7 @@ function initSidebar() {
     $('#locations-switch').prop('checked', Store.get('showLocations'))
     $('#location-sidebar-switch').prop('checked', Store.get('useLocationSidebar'))
     $('#location-sidebar-wrapper').toggle(Store.get('showLocations'))
+    $('#locations-filter-wrapper').toggle(Store.get('showLocations'))
 
     $('#geoloc-switch').prop('checked', Store.get('geoLocate'))
     $('#lock-marker-switch').prop('checked', Store.get('lockMarker'))
@@ -556,6 +566,9 @@ function locationLabel(location) {
                 </div>
                 <div class='location info last-scanned'>
                   Last Scanned: ${lastScannedStr}
+                </div>
+                <div>
+                    <span class='location links exclude'><a href='javascript:excludeLocation(${location.occupation_id})'>Exclude</a></span>
                 </div>
               </div>
             </div>`
@@ -883,6 +896,25 @@ function clearStaleMarkers() {
             delete mapData.scanned[key]
         }
     })
+
+    $.each(mapData.locations, function (key, location) {
+        const occupation_id = location['occupation_id']
+        const isLocationExcluded = excludedLocations.indexOf(occupation_id) !== -1
+
+        if (isLocationExcluded) {
+            const oldMarker = location.marker
+
+            if (oldMarker.rangeCircle) {
+                oldMarker.rangeCircle.setMap(null)
+                delete oldMarker.rangeCircle
+            }
+
+            oldMarker.setMap(null)
+            delete mapData.locations[key]
+            // Overwrite method to avoid all timing issues with libraries.
+            oldMarker.setMap = function () {}
+        }
+    })
 }
 
 function showInBoundsMarkers(markers, type) {
@@ -952,6 +984,7 @@ function loadRawData() {
             'oSwLng': oSwLng,
             'oNeLat': oNeLat,
             'oNeLng': oNeLng,
+            'eids_locations': String(excludedLocations),
             'playerid': playeridparam
         },
         dataType: 'json',
@@ -1010,6 +1043,25 @@ function processAccount(i, item) {
 function processLocation(i, item) {
     if (!Store.get('showLocations')) {
         return false
+    }
+
+    var removeLocationFromMap = function (uuid) {
+        if (mapData.locations[uuid] && mapData.locations[uuid].marker) {
+            mapData.locations[uuid].marker.setMap(null)
+            delete mapData.locations[uuid]
+        }
+    }
+
+    var needToShow = true
+
+    const isLocationExcluded = excludedLocations.indexOf(item['occupation_id']) !== -1
+    if (isLocationExcluded) {
+        needToShow = false
+    }
+
+    if (!needToShow) {
+        removeLocationFromMap(item['uuid'])
+        return true
     }
 
     if (item['uuid'] in mapData.locations) {
@@ -1424,9 +1476,62 @@ $(function () {
     bootstrapMapProvider()
 
     moment.locale(language)
+
+    function formatOccupierState(state) {
+        if (!state.id) {
+            return state.text
+        }
+        var $state = $(
+            '<span><img class="occupier sprite" src="static/images/markers/occupiers/' + state.id.toString() + '.webp"> ' + state.text + '</span>'
+        )
+        return $state
+    }
+
     if (Store.get('startAtUserLocation') && getParameterByName('lat') == null && getParameterByName('lon') == null) {
         centerMapOnLocation()
     }
+
+    $selectExcludeLocations = $('#exclude-location')
+
+    // Load Occupier type names and populate lists
+    $.getJSON('static/dist/data/occupier_type.min.json').done(function (data) {
+        var occupier_typeList = []
+
+        $.each(data, function (key, value) {
+            var _types = []
+            occupier_typeList.push({
+                id: key,
+                text: i8ln(value)
+            })
+            value = i8ln(value)
+            idToOccupierType[key] = value
+        })
+
+        // setup the filter lists
+        $selectExcludeLocations.select2({
+            placeholder: i8ln('Select Occupier Type'),
+            data: occupier_typeList,
+            templateResult: formatOccupierState
+        })
+
+        // setup list change behavior now that we have the list to work from
+        $selectExcludeLocations.on('change', function (e) {
+            buffer = excludedLocations
+            excludedLocations = $selectExcludeLocations.val().map(Number)
+            buffer = buffer.filter(function (e) {
+                return this.indexOf(e) < 0
+            }, excludedLocations)
+            clearStaleMarkers()
+            Store.set('remember_select_exclude_locations', excludedLocations)
+        })
+
+        // recall saved lists
+        $selectExcludeLocations.val(Store.get('remember_select_exclude_locations')).trigger('change')
+
+        if (isTouchDevice() && isMobileDevice()) {
+            $('.select2-search input').prop('readonly', true)
+        }
+    })
 
     // run interval timers to regularly update map and timediffs
     window.setInterval(updateLabelDiffTime, 1000)
@@ -1497,6 +1602,12 @@ $(function () {
             'duration': 500
         }
         lastlocations = false
+        var wrapperLocations = $('#locations-filter-wrapper')
+        if (this.checked) {
+            wrapperLocations.show(options)
+        } else {
+            wrapperLocations.hide(options)
+        }
         buildSwitchChangeListener(mapData, ['locations'], 'showLocations').bind(this)()
     })
 

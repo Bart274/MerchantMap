@@ -525,6 +525,7 @@ class Location(LatLongModel):
         ne_lat,
         ne_lng,
         playerid,
+        exclude=None,
         timestamp=0,
         o_sw_lat=None,
         o_sw_lng=None,
@@ -532,6 +533,9 @@ class Location(LatLongModel):
         o_ne_lng=None,
     ):
         query = Location.select()
+
+        if exclude:
+            query = query.where(Location.occupation_id.not_in(list(exclude)))
 
         if not (sw_lat and sw_lng and ne_lat and ne_lng):
             query = query.dicts()

@@ -111,6 +111,10 @@ var StoreOptions = {
         default: 'style_merchant', // roadmap, satellite, hybrid, nolabels_style, dark_style, style_light2, style_pgo, dark_style_nl, style_pgo_day, style_pgo_night, style_pgo_dynamic
         type: StoreTypes.String
     },
+    'remember_select_exclude_locations': {
+        default: [],
+        type: StoreTypes.JSON
+    },
     'showScanned': {
         default: true,
         type: StoreTypes.Boolean
@@ -176,6 +180,26 @@ var StoreOptions = {
         type: StoreTypes.String
     },
     'isBounceDisabled': {
+        default: false,
+        type: StoreTypes.Boolean
+    },
+    'scaleByRarity': {
+        default: true,
+        type: StoreTypes.Boolean
+    },
+    'showSearchMarker': {
+        default: false,
+        type: StoreTypes.Boolean
+    },
+    'isSearchMarkerMovable': {
+        default: false,
+        type: StoreTypes.Boolean
+    },
+    'showLocationMarker': {
+        default: false,
+        type: StoreTypes.Boolean
+    },
+    'isLocationMarkerMovable': {
         default: false,
         type: StoreTypes.Boolean
     }
