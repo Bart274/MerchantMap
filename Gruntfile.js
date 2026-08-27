@@ -22,6 +22,7 @@ module.exports = function (grunt) {
             dist: {
                 files: {
                     'static/dist/css/app.built.css': 'static/sass/main.scss',
+                    'static/dist/css/settlements.built.css': 'static/sass/settlements.scss',
                     'static/dist/css/herds.built.css': 'static/sass/herds.scss',
                     'static/dist/css/ruines.built.css': 'static/sass/ruines.scss',
                     'static/dist/css/mobile.built.css': 'static/sass/mobile.scss'
@@ -40,6 +41,7 @@ module.exports = function (grunt) {
                     'static/dist/js/app.built.js': 'static/js/app.js',
                     'static/dist/js/map.built.js': 'static/js/map.js',
                     'static/dist/js/map.common.built.js': 'static/js/map.common.js',
+                    'static/dist/js/settlements.built.js': 'static/js/settlements.js',
                     'static/dist/js/herds.built.js': 'static/js/herds.js',
                     'static/dist/js/ruines.built.js': 'static/js/ruines.js',
                     'static/dist/js/label.built.js': 'static/js/label.js',
@@ -63,6 +65,7 @@ module.exports = function (grunt) {
                     'static/dist/js/app.min.js': 'static/dist/js/app.built.js',
                     'static/dist/js/map.min.js': 'static/dist/js/map.built.js',
                     'static/dist/js/map.common.min.js': 'static/dist/js/map.common.built.js',
+                    'static/dist/js/settlements.min.js': 'static/dist/js/settlements.built.js',
                     'static/dist/js/herds.min.js': 'static/dist/js/herds.built.js',
                     'static/dist/js/ruines.min.js': 'static/dist/js/ruines.built.js',
                     'static/dist/js/label.min.js': 'static/dist/js/label.built.js',
@@ -115,6 +118,7 @@ module.exports = function (grunt) {
             build: {
                 files: {
                     'static/dist/css/app.min.css': 'static/dist/css/app.built.css',
+                    'static/dist/css/settlements.min.css': 'static/dist/css/settlements.built.css',
                     'static/dist/css/herds.min.css': 'static/dist/css/herds.built.css',
                     'static/dist/css/ruines.min.css': 'static/dist/css/ruines.built.css',
                     'static/dist/css/mobile.min.css': 'static/dist/css/mobile.built.css'

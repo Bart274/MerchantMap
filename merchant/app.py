@@ -104,6 +104,9 @@ class MerchantApp(Flask):
         self.route("/account_data", methods=["GET"])(self.get_accountdata)
         self.route("/location_data", methods=["GET"])(self.get_locationdata)
 
+        self.route("/settlements", methods=["GET"])(self.settlementview)
+        self.route("/raw_settlements", methods=["POST"])(self.raw_settlements)
+
         self.route("/herds", methods=["GET"])(self.herdview)
         self.route("/raw_herds", methods=["POST"])(self.raw_herds)
 
@@ -359,7 +362,7 @@ class MerchantApp(Flask):
             full_path=str(full_path),
         )
 
-    def herdview(self):
+    def settlementview(self):
         self.heartbeat[0] = now()
         args = get_args()
         if args.on_demand_timeout > 0:
@@ -368,7 +371,30 @@ class MerchantApp(Flask):
         map_lat = self.current_location[0]
         map_lng = self.current_location[1]
 
-        geofences = request.args.get("geofences", args.default_geofence)
+        playerid = request.args.get("playerid", "")
+        if playerid:
+            account = Account.get_by_id(playerid)
+            if account:
+                map_lat = account.get("latitude", self.current_location[0])
+                map_lng = account.get("longitude", self.current_location[1])
+
+        return render_template(
+            "settlements.html",
+            lat=map_lat,
+            lng=map_lng,
+            gmaps_key=args.gmaps_key,
+            lang="en",
+            mapname=args.mapname,
+        )
+
+    def herdview(self):
+        self.heartbeat[0] = now()
+        args = get_args()
+        if args.on_demand_timeout > 0:
+            self.control_flags["on_demand"].clear()
+
+        map_lat = self.current_location[0]
+        map_lng = self.current_location[1]
 
         playerid = request.args.get("playerid", "")
         if playerid:
@@ -384,7 +410,6 @@ class MerchantApp(Flask):
             gmaps_key=args.gmaps_key,
             lang="en",
             mapname=args.mapname,
-            geofences=str(geofences),
         )
 
     def ruineview(self):
@@ -395,8 +420,6 @@ class MerchantApp(Flask):
 
         map_lat = self.current_location[0]
         map_lng = self.current_location[1]
-
-        geofences = request.args.get("geofences", args.default_geofence)
 
         playerid = request.args.get("playerid", "")
         if playerid:
@@ -412,7 +435,6 @@ class MerchantApp(Flask):
             gmaps_key=args.gmaps_key,
             lang="en",
             mapname=args.mapname,
-            geofences=str(geofences),
         )
 
     def raw_data(self):
@@ -548,6 +570,29 @@ class MerchantApp(Flask):
                             o_ne_lng=o_ne_lng,
                         )
                     )
+
+        return jsonify(d)
+
+    def raw_settlements(self):
+        # log.info("Raw settlement request received")
+        self.heartbeat[0] = now()
+        args = get_args()
+        if args.on_demand_timeout > 0:
+            self.control_flags["on_demand"].clear()
+
+        playerid = request.form.get("playerid", "")
+
+        d = {"timestamp": datetime.utcnow()}
+
+        log.info(f"Loading the settlements with account {playerid}")
+
+        settlement_dict = Location.get_settlements(playerid)
+
+        log.info("Found %s settlements" % len(settlement_dict))
+
+        d["settlements"] = []
+        for udid, settlement in settlement_dict.items():
+            d["settlements"].append(settlement)
 
         return jsonify(d)
 

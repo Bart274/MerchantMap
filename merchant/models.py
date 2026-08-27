@@ -385,7 +385,7 @@ class Location(LatLongModel):
         return latitude, longitude
 
     @staticmethod
-    def _get_locations_with_occupation(playerid, min_occupation_id=0, max_occupation_id=9999):
+    def _get_locations_with_occupation(player_id, min_occupation_id=0, max_occupation_id=9999):
         query = (
             Location.select()
             .where((Location.occupation_id >= min_occupation_id) & (Location.occupation_id <= max_occupation_id))
@@ -399,10 +399,10 @@ class Location(LatLongModel):
         account_uuid = None
         acc_lat = 0
         acc_lng = 0
-        if playerid:
-            account_res = Account.get_by_id(playerid)
+        if player_id:
+            account_res = Account.get_by_id(player_id)
             if account_res is not None:
-                account_uuid = playerid
+                account_uuid = player_id
                 acc_lat = account_res.get("latitude", 0)
                 acc_lng = account_res.get("longitude", 0)
 
@@ -483,12 +483,61 @@ class Location(LatLongModel):
         return locations
 
     @staticmethod
-    def get_herds(playerid):
-        return Location._get_locations_with_occupation(playerid, 20, 23)
+    def get_herds(player_id):
+        return Location._get_locations_with_occupation(player_id, 20, 23)
 
     @staticmethod
-    def get_ruines(playerid):
-        return Location._get_locations_with_occupation(playerid, 30, 37)
+    def get_ruines(player_id):
+        return Location._get_locations_with_occupation(player_id, 30, 37)
+
+    @staticmethod
+    def get_settlements(player_id):
+        query = Location.select().where(Location.player_id == player_id).dicts()
+
+        gc.disable()
+
+        locations = {}
+
+        account_uuid = None
+        acc_lat = 0
+        acc_lng = 0
+        if player_id:
+            account_res = Account.get_by_id(player_id)
+            if account_res is not None:
+                account_uuid = player_id
+                acc_lat = account_res.get("latitude", 0)
+                acc_lng = account_res.get("longitude", 0)
+
+        if not account_uuid:
+            return locations
+
+        location_uuids = []
+        for b in query:
+            location_uuids.append(b["uuid"])
+
+        for b in query:
+            if args.china:
+                b["latitude"], b["longitude"] = transform_from_wgs_to_gcj(b["latitude"], b["longitude"])
+            b["latitude"] = round(b["latitude"], 5)
+            b["longitude"] = round(b["longitude"], 5)
+
+            latitude, longitude = Location._coords_offset(b)
+            b["latitude"] = latitude
+            b["longitude"] = longitude
+
+            b["sprite"] = Location._result_to_sprite(b)
+            b["land_type_name"] = Location._result_to_land_type_name(b)
+
+            dd_lat = b["latitude"]
+            dd_lng = b["longitude"]
+            distance = round(geopy.distance.geodesic((acc_lat, acc_lng), (dd_lat, dd_lng)).km * 1000)
+            b["distance"] = distance
+
+            locations[b["uuid"]] = b
+
+        gc.enable()
+
+        return locations
 
     @staticmethod
     def get_by_id(location_id, account):

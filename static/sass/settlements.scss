@@ -12,8 +12,8 @@
   xsmall: '(max-width: 480px)'
 ));
 
-@import 'layout/herd';
-@import 'layout/herd-details';
+@import 'layout/settlement';
+@import 'layout/settlement-details';
 
 button {
     background-color: #4CAF50; /* Green */
@@ -28,7 +28,7 @@ button {
     width: 100px;
 }
 
-#herd {
+#settlement {
   background-image: url('../../../images/searchicon.png');
   background-position: 10px 10px;
   background-repeat: no-repeat;
@@ -47,7 +47,7 @@ button.level { width: 15%; }
 
 .inactive {opacity: 0.6;}
 
-input[name=herdStatus] {
+input[name=settlementStatus] {
   display: None;
 }
 
@@ -66,16 +66,6 @@ table, th, td {
   width: 100%;
   border: 1px solid #ddd;
   font-size: 18px;
-}
-
-#myTable .unknown {
-  background-color: #8bf8ef;
-}
-#myTable .done {
-  background-color: #7fed5a;
-}
-#myTable .notdone {
-  background-color: #f5426f;
 }
 
 #myTable th, #myTable td {

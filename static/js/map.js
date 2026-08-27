@@ -38,7 +38,6 @@ var lastaccounts
 var lastlocations
 
 var polygons = []
-var geofencesSet = false
 
 var selectedStyle = 'light'
 

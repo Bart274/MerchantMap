@@ -78,12 +78,6 @@ self.addEventListener('message', function (event) {
       const count = event.data.count;
       updateBadge(count);
     }
-    if (event.data && event.data.type === 'START_BACKGROUND_SYNC') {
-      // Store config sent from page
-      self.geofencenames = event.data.geofencenames;
-      self.account = event.data.account;
-      self.wayvessel = event.data.wayvessel;
-    }
 })
 
 self.onnotificationclick = function (event) {
