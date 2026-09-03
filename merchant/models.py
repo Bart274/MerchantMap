@@ -32,7 +32,7 @@ args = get_args()
 flaskDb = FlaskDB()
 cache = TTLCache(maxsize=100, ttl=60 * 5)
 
-db_schema_version = 1
+db_schema_version = 2
 
 LOCATION_OFFSET = 4
 
@@ -345,7 +345,6 @@ class Location(LatLongModel):
     player_relation = DoubleField(default=0, null=True)
     gentle_possible = BooleanField(default=False, null=True)
     excavate_possible = BooleanField(default=False, null=True)
-
     last_scanned = DateTimeField(index=True)
 
     @staticmethod
@@ -654,6 +653,85 @@ class LocationAction(LatLongModel):
     player_id = IntegerField()
     gentle_done = BooleanField(default=False)
     excavate_done = BooleanField(default=False)
+
+
+class Settlement(BaseModel):
+    uuid = IntegerField(primary_key=True, index=True)
+    location_id = IntegerField()
+    player_id = IntegerField()
+    name = CharField(max_length=100)
+    settlement_type = CharField(max_length=100)
+    settlement_type_id = IntegerField()
+    population = IntegerField()
+    max_population = IntegerField()
+    cultural_score = IntegerField()
+    daily_gold = IntegerField()
+    stock_count = IntegerField()
+    max_storage = IntegerField()
+    corruption_days = IntegerField()
+    corruption_cost = IntegerField()
+    last_scanned = DateTimeField(index=True)
+
+    @staticmethod
+    def get_settlements(player_id):
+        query = Settlement.select().where(Settlement.player_id == player_id).dicts()
+
+        gc.disable()
+
+        settlements = {}
+
+        account_uuid = None
+        account_name = None
+        acc_lat = 0
+        acc_lng = 0
+        if player_id:
+            account_res = Account.get_by_id(player_id)
+            if account_res is not None:
+                account_uuid = player_id
+                account_name = account_res.get("username", "")
+                acc_lat = account_res.get("latitude", 0)
+                acc_lng = account_res.get("longitude", 0)
+
+        if not account_uuid:
+            return settlements
+
+        for b in query:
+            location = Location.get_by_id(b["location_id"], account_name)
+            b["location"] = location
+            b["latitude"] = location["latitude"]
+            b["longitude"] = location["longitude"]
+            if args.china:
+                b["latitude"], b["longitude"] = transform_from_wgs_to_gcj(b["latitude"], b["longitude"])
+            b["latitude"] = round(b["latitude"], 5)
+            b["longitude"] = round(b["longitude"], 5)
+
+            latitude, longitude = Location._coords_offset(location)
+            b["latitude"] = latitude
+            b["longitude"] = longitude
+
+            b["sprite"] = Location._result_to_sprite(location)
+            b["land_type_name"] = Location._result_to_land_type_name(location)
+            b["district_id"] = location["district_id"]
+
+            dd_lat = b["latitude"]
+            dd_lng = b["longitude"]
+            distance = round(geopy.distance.geodesic((acc_lat, acc_lng), (dd_lat, dd_lng)).km * 1000)
+            b["distance"] = distance
+
+            b["almost_full"] = (
+                round(100 * (b["stock_count"] / b["max_storage"])) > 90 if b["max_storage"] > 0 else False
+            )
+            b["is_full"] = b["stock_count"] == b["max_storage"]
+            b["almost_populated"] = (
+                round(100 * (b["population"] / b["max_population"])) > 90 if b["max_population"] > 0 else False
+            )
+            b["populated"] = b["population"] == b["max_population"]
+
+            settlements[b["uuid"]] = b
+
+        gc.enable()
+
+        return settlements
 
 
 class ScannedLocation(LatLongModel):
@@ -1011,6 +1089,7 @@ def create_tables(db):
         Account,
         Location,
         LocationAction,
+        Settlement,
         ScannedLocation,
     ]
     with db:
@@ -1027,6 +1106,7 @@ def drop_tables(db):
         Account,
         Location,
         LocationAction,
+        Settlement,
         ScannedLocation,
         Versions,
     ]
@@ -1112,6 +1192,9 @@ def database_migrate(db, old_ver):
     migrator = MySQLMigrator(db)
 
     if old_ver < 1:
+        create_tables(db)
+
+    if old_ver < 2:
         create_tables(db)
 
     log.info("Schema upgrade complete.")

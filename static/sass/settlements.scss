@@ -68,6 +68,30 @@ table, th, td {
   font-size: 18px;
 }
 
+#myTable .full {
+  background-color: #f5426f;
+}
+
+#myTable .almost_full {
+  background-color: #fac658;
+}
+
+#myTable .corrupted {
+  background-color: #f5426f;
+}
+
+#myTable .almost_corrupted {
+  background-color: #fac658;
+}
+
+#myTable .populated {
+  background-color: #7fed5a;
+}
+
+#myTable .almost_populated {
+  background-color: #d4fdc3;
+}
+
 #myTable th, #myTable td {
   text-align: left;
   padding: 12px;

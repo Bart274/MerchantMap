@@ -18,9 +18,45 @@ function showSettlements(data) {
     });
     $.each( settlements, function( key, val ) {
       let name = val['name'];
+
+      if (val['settlement_type']) {
+          name = val['settlement_type'] + " " + name;
+      }
+
       let class_string = 'my-new-list';
 
+      let populationStr = val['population'] + " / " + val['max_population'];
+      let populationClass = 'population';
+      if (val['almost_populated']) {
+          populationClass += ' almost_populated';
+      }
+      if (val['populated']) {
+          populationClass += ' populated';
+      }
+
+      let financialStr = 'Daily gold: ' + val['daily_gold'];
+      let financialClass = 'financial';
+      if (val['corruption_days']) {
+          financialStr += '<br/>Last visited ' + val['corruption_days'] + ' days ago.';
+          if (val['corruption_cost']) {
+              financialStr += '<br/>Corruption to pay: ' + val['corruption_cost'];
+              financialClass += ' corrupted';
+          } else if (val['corruption_days'] >= 10) {
+              financialClass += ' almost_corrupted';
+          }
+      }
+      let storageStr = val['stock_count'] + " / " + val['max_storage'];
+      let storageClass = 'storage';
+      if (val['almost_full']) {
+          storageClass += ' almost_full';
+      }
+      if (val['is_full']) {
+          storageClass += ' full';
+      }
+
       let districtStr = 'ID: ' +val['district_id'];
+
+      let culturalStr = 'Cultural score: ' + val['cultural_score'];
 
       let distance = val['distance'];
       let distance_unit = " m";
@@ -32,11 +68,22 @@ function showSettlements(data) {
       let distance_str = distance + distance_unit;
 
       let imgSrc = val['sprite'];
+      let imgSrcHtml = '';
+      if (imgSrc) {
+          imgSrcHtml = '<img src="' + imgSrc + '" class="sprite"/>';
+      }
 
       $( "<tr/>", {
         "class": class_string,
-        html: "<td> \
-                    <img src='" + imgSrc + "' class='sprite'/> " + name + " \
+        html: "<td>" + imgSrcHtml + " " + name + " \
+                </td><td class='" + populationClass + "'> \
+                    " + populationStr + " \
+                </td><td class='" + financialClass + "'> \
+                    " + financialStr + " \
+                </td><td> \
+                    " + culturalStr + " \
+                </td><td class='" + storageClass + "'> \
+                    " + storageStr + " \
                 </td><td> \
                     " + moment(val['last_scanned']).format('YYYY-MM-DD HH:mm') + " \
                 </td><td> \

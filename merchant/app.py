@@ -22,6 +22,7 @@ from .models import (
     Account,
     Location,
     LocationAction,
+    Settlement,
 )
 from .utils import get_args, now, dottedQuadToNum
 from .blacklist import fingerprints
@@ -167,10 +168,12 @@ class MerchantApp(Flask):
         accounts = {}
         locations = {}
         location_actions = {}
+        settlements = {}
 
         center = data.get("center", {})
         player = data.get("player", {})
         locations_dict = data.get("locations", [])
+        realms_dict = data.get("realm", [])
         if not center or not player or not locations_dict:
             return "error"
 
@@ -247,6 +250,62 @@ class MerchantApp(Flask):
 
             locations[uuid] = location_data
 
+        settlement_uuids = []
+        for realm_dict in realms_dict:
+            uuid = realm_dict.get("id", 0)
+            location_id = realm_dict.get("location_id", 0)
+            name = realm_dict.get("name", "")
+            settlement_type = realm_dict.get("type", "")
+            settlement_type_id = realm_dict.get("type_id", 0)
+            coordinates = realm_dict.get("coordinates", {})
+            latitude = coordinates.get("lat", 0)
+            longitude = coordinates.get("lng", 0)
+            population = realm_dict.get("population", 0)
+            max_population = realm_dict.get("max_population", 0)
+            cultural_score = realm_dict.get("cultural_score", 0)
+            daily_gold = realm_dict.get("daily_gold", 0)
+            stock_count = realm_dict.get("stock_count", 0)
+            max_storage = realm_dict.get("max_storage", 0)
+            corruption_days = realm_dict.get("corruption_days", 0)
+            corruption_cost = realm_dict.get("corruption_cost", 0)
+
+            location_data = {
+                "uuid": location_id,
+                "latitude": round(latitude, 5),
+                "longitude": round(longitude, 5),
+                "player_id": player_id,
+                "name": name,
+                "last_scanned": now_date,
+            }
+            if location_id not in locations:
+                locations[location_id] = location_data
+
+            settlement_data = {
+                "uuid": uuid,
+                "location_id": location_id,
+                "player_id": player_id,
+                "name": name,
+                "settlement_type": settlement_type,
+                "settlement_type_id": settlement_type_id,
+                "population": population,
+                "max_population": max_population,
+                "cultural_score": cultural_score,
+                "daily_gold": daily_gold,
+                "stock_count": stock_count,
+                "max_storage": max_storage,
+                "corruption_days": corruption_days,
+                "corruption_cost": corruption_cost,
+                "last_scanned": now_date,
+            }
+            settlements[uuid] = settlement_data
+            settlement_uuids.append(uuid)
+
+        if settlement_uuids:
+            with Settlement.database():
+                Settlement.delete().where(
+                    (~(Settlement.uuid << settlement_uuids)) & (Settlement.player_id == player_id)
+                ).execute()
+
         if lat != 0 and lng != 0:
             scan_location = ScannedLocation.get_by_loc([lat, lng])
             scan_location["icon_size"] = 150
@@ -261,6 +320,9 @@ class MerchantApp(Flask):
 
         if location_actions:
             self.db_update_queue.put((LocationAction, location_actions))
+
+        if settlements:
+            self.db_update_queue.put((Settlement, settlements))
 
         return "ok"
 
@@ -586,7 +648,7 @@ class MerchantApp(Flask):
 
         log.info(f"Loading the settlements with account {playerid}")
 
-        settlement_dict = Location.get_settlements(playerid)
+        settlement_dict = Settlement.get_settlements(playerid)
 
         log.info("Found %s settlements" % len(settlement_dict))
 
