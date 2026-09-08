@@ -67,6 +67,11 @@ function showSettlements(data) {
       }
       let distance_str = distance + distance_unit;
 
+      let lastvisitedStr = "Not yet visited";
+      if (val['last_visited']) {
+          lastvisitedStr = moment(val['last_visited']).format('YYYY-MM-DD HH:mm')
+      }
+
       let imgSrc = val['sprite'];
       let imgSrcHtml = '';
       if (imgSrc) {
@@ -86,6 +91,8 @@ function showSettlements(data) {
                     " + storageStr + " \
                 </td><td> \
                     " + moment(val['last_scanned']).format('YYYY-MM-DD HH:mm') + " \
+                </td><td> \
+                    " + lastvisitedStr + " \
                 </td><td> \
                     " + districtStr + " \
                 </td><td> \

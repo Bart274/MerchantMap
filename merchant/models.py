@@ -32,7 +32,7 @@ args = get_args()
 flaskDb = FlaskDB()
 cache = TTLCache(maxsize=100, ttl=60 * 5)
 
-db_schema_version = 2
+db_schema_version = 3
 
 LOCATION_OFFSET = 4
 
@@ -671,6 +671,7 @@ class Settlement(BaseModel):
     corruption_days = IntegerField()
     corruption_cost = IntegerField()
     last_scanned = DateTimeField(index=True)
+    last_visited = DateTimeField(index=True, null=True)
 
     @staticmethod
     def get_settlements(player_id):
@@ -722,10 +723,14 @@ class Settlement(BaseModel):
                 round(100 * (b["stock_count"] / b["max_storage"])) > 90 if b["max_storage"] > 0 else False
             )
             b["is_full"] = b["stock_count"] == b["max_storage"]
+            if b["is_full"]:
+                b["almost_full"] = False
             b["almost_populated"] = (
                 round(100 * (b["population"] / b["max_population"])) > 90 if b["max_population"] > 0 else False
             )
             b["populated"] = b["population"] == b["max_population"]
+            if b["populated"]:
+                b["almost_populated"] = False
 
             settlements[b["uuid"]] = b
 
@@ -1196,6 +1201,11 @@ def database_migrate(db, old_ver):
 
     if old_ver < 2:
         create_tables(db)
+
+    if old_ver < 3:
+        migrate(
+            migrator.add_column("settlement", "last_visited", DateTimeField(index=True, null=True)),
+        )
 
     log.info("Schema upgrade complete.")
     return True

@@ -277,8 +277,10 @@ class MerchantApp(Flask):
                 "name": name,
                 "last_scanned": now_date,
             }
+            visited = True
             if location_id not in locations:
                 locations[location_id] = location_data
+                visited = False
 
             settlement_data = {
                 "uuid": uuid,
@@ -297,6 +299,8 @@ class MerchantApp(Flask):
                 "corruption_cost": corruption_cost,
                 "last_scanned": now_date,
             }
+            if visited:
+                settlement_data["last_visited"] = now_date
             settlements[uuid] = settlement_data
             settlement_uuids.append(uuid)
 
