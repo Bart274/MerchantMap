@@ -177,6 +177,8 @@ class MerchantApp(Flask):
         if not center or not player or not locations_dict:
             return "error"
 
+        scout_size = data.get("scout_size", 3)
+
         lat = center.get("lat", 0)
         lng = center.get("lng", 0)
 
@@ -312,7 +314,7 @@ class MerchantApp(Flask):
 
         if lat != 0 and lng != 0:
             scan_location = ScannedLocation.get_by_loc([lat, lng])
-            scan_location["icon_size"] = 150
+            scan_location["scout_size"] = scout_size
             ScannedLocation.update_band(scan_location, now_date)
             self.db_update_queue.put((ScannedLocation, {0: scan_location}))
 

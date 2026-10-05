@@ -1,4 +1,5 @@
 import logging
+import math
 import sys
 import gc
 import time
@@ -32,7 +33,7 @@ args = get_args()
 flaskDb = FlaskDB()
 cache = TTLCache(maxsize=100, ttl=60 * 5)
 
-db_schema_version = 3
+db_schema_version = 4
 
 LOCATION_OFFSET = 4
 
@@ -757,6 +758,7 @@ class ScannedLocation(LatLongModel):
     width = SmallIntegerField(default=0)
 
     icon_size = SmallIntegerField(default=150)
+    scout_size = SmallIntegerField(default=3)
 
     fortradius = UBigIntegerField(default=450)
     monradius = UBigIntegerField(default=70)
@@ -833,13 +835,27 @@ class ScannedLocation(LatLongModel):
                 .dicts()
             )
 
-        if args.china:
-            for result in query:
+        for result in query:
+            if args.china:
                 result["latitude"], result["longitude"] = transform_from_wgs_to_gcj(
                     result["latitude"], result["longitude"]
                 )
-                result["latitude"] = round(result["latitude"], 5)
-                result["longitude"] = round(result["longitude"], 5)
+            result["latitude"] = round(result["latitude"], 5)
+            result["longitude"] = round(result["longitude"], 5)
+
+            new_lat = result["latitude"]
+            new_lng = result["longitude"]
+            new_lat = math.floor(new_lat * pow(10, LOCATION_OFFSET - 1)) * pow(10, -1 * (LOCATION_OFFSET - 1))
+            new_lng = math.floor(new_lng * pow(10, LOCATION_OFFSET - 1)) * pow(10, -1 * (LOCATION_OFFSET - 1))
+            sw_lat = new_lat - (result["scout_size"] - 1) * pow(10, -1 * (LOCATION_OFFSET - 1))
+            sw_lng = new_lng - (result["scout_size"] - 1) * pow(10, -1 * (LOCATION_OFFSET - 1))
+            ne_lat = new_lat + (result["scout_size"]) * pow(10, -1 * (LOCATION_OFFSET - 1))
+            ne_lng = new_lng + (result["scout_size"]) * pow(10, -1 * (LOCATION_OFFSET - 1))
+
+            result["sw_lat"] = sw_lat
+            result["sw_lng"] = sw_lng
+            result["ne_lat"] = ne_lat
+            result["ne_lng"] = ne_lng
         return list(query)
 
     @staticmethod
@@ -1205,6 +1221,11 @@ def database_migrate(db, old_ver):
     if old_ver < 3:
         migrate(
             migrator.add_column("settlement", "last_visited", DateTimeField(index=True, null=True)),
+        )
+
+    if old_ver < 4:
+        migrate(
+            migrator.add_column("scannedlocation", "scout_size", SmallIntegerField(default=3)),
         )
 
     log.info("Schema upgrade complete.")

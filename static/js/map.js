@@ -167,6 +167,27 @@ function createLeafletCircle(lat, lng, options) {
 
     return circle
 }
+function leafletRectangleSetOptions(opts) {
+    this.setStyle({color: opts.fillColor, fillColor: opts.fillColor})
+}
+
+function createLeafletRectangle(ne_lat, sw_lat, ne_lng, sw_lng, options) {
+    var rectangle = L.rectangle([[sw_lat, sw_lng], [ne_lat, ne_lng]], {
+        interactive: false,
+        color: options.fillColor,
+        weight: 1,
+        opacity: 0.5,
+        fillColor: options.fillColor,
+        fillOpacity: 0.1
+    })
+    rectangle._onMap = false
+
+    rectangle.setMap = leafletOverlaySetMap
+    rectangle.getMap = leafletOverlayGetMap
+    rectangle.setOptions = leafletRectangleSetOptions
+
+    return rectangle
+}
 
 function buildLeafletMapProvider() {
     return {
@@ -179,6 +200,11 @@ function buildLeafletMapProvider() {
             var circle = createLeafletCircle(lat, lng, options)
             circle.setMap(map)
             return circle
+        },
+        createRectangle: function (ne_lat, sw_lat, ne_lng, sw_lng, options) {
+            var rectangle = createLeafletRectangle(ne_lat, sw_lat, ne_lng, sw_lng, options)
+            rectangle.setMap(map)
+            return rectangle
         },
         makeSize: function (width, height) {
             return {width: width, height: height}
@@ -227,6 +253,22 @@ function buildGoogleMapProvider() {
                 fillOpacity: 0.1,
                 strokeWeight: 1,
                 strokeOpacity: 0.5
+            })
+        },
+        createRectangle: function (ne_lat, sw_lat, ne_lng, sw_lng, options) {
+            return new google.maps.Rectangle({
+                map: map,
+                clickable: false,
+                fillColor: options.fillColor,
+                fillOpacity: 0.1,
+                strokeWeight: 1,
+                strokeOpacity: 0.5,
+                bounds: {
+                    north: ne_lat,
+                    south: sw_lat,
+                    east: ne_lng,
+                    west: sw_lng,
+                }
             })
         },
         makeSize: function (width, height) {
@@ -1094,8 +1136,7 @@ function updateLocations() {
 }
 
 function setupScannedMarker(item) {
-    return MapProvider.createCircle(item['latitude'], item['longitude'], {
-        radius: item['icon_size'], // metres
+    return MapProvider.createRectangle(item['ne_lat'], item['sw_lat'], item['ne_lng'], item['sw_lng'], {
         fillColor: getColorByDate(item['last_modified'])
     })
 }
