@@ -12,6 +12,7 @@ services:
       MERCHANTMAP_DB_USER: ${MYSQL_USER:?set MYSQL_USER in .env}
       MERCHANTMAP_DB_PASS: ${MYSQL_PASSWORD:?set MYSQL_PASSWORD in .env}
       MERCHANTMAP_EXTERNAL_HOSTNAME: ${MERCHANTMAP_EXTERNAL_HOSTNAME:-http://127.0.0.1:5050}
+      MERCHANTMAP_MAP_SECURITY: ${MERCHANTMAP_MAP_SECURITY:-}
     depends_on:
       db:
         condition: service_healthy

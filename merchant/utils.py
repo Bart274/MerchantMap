@@ -78,14 +78,20 @@ def get_args():
     parser.add_argument(
         "-k",
         "--gmaps-key",
-        help="Google Maps Javascript API Key. Required unless --map-provider "
-        "is 'leaflet'.",
+        help="Google Maps Javascript API Key. Required unless --map-provider is 'leaflet'.",
     )
     parser.add_argument(
         "--map-provider",
         help="Which map renderer to serve the frontend with.",
         choices=["google", "leaflet"],
         default="google",
+    )
+    parser.add_argument(
+        "-ms",
+        "--map-security",
+        help="Shared Secrets that are needed to send data to the map.",
+        default=[],
+        action="append",
     )
     parser.add_argument("-C", "--cors", help="Enable CORS on web server.", action="store_true", default=False)
     parser.add_argument(
@@ -277,12 +283,14 @@ def get_args():
     needs_gmaps_key = args.map_provider == "google" or is_address
     if not args.gmaps_key and needs_gmaps_key:
         parser.print_usage()
-        print((
-            sys.argv[0]
-            + ": error: argument -k/--gmaps-key is required unless\n"
-            + "--map-provider is 'leaflet' and --location is given as\n"
-            + "'lat,lng' coordinates (geocoding an address still needs it)."
-        ))
+        print(
+            (
+                sys.argv[0]
+                + ": error: argument -k/--gmaps-key is required unless\n"
+                + "--map-provider is 'leaflet' and --location is given as\n"
+                + "'lat,lng' coordinates (geocoding an address still needs it)."
+            )
+        )
         sys.exit(1)
 
     args.locales_dir = "static/dist/locales"
