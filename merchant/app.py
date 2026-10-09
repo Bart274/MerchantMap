@@ -340,6 +340,14 @@ class MerchantApp(Flask):
         if ip_addr in args.trusted_proxies:
             ip_addr = request.headers.get("X-Forwarded-For", ip_addr)
 
+        if request.path == "/game_webhook" and args.map_security:
+            entered_secret = request.headers.get("X-Merchant-Passthrough-Secret", "")
+            if not entered_secret:
+                log.debug("Denied access because secret is missing.")
+                abort(403)
+            if entered_secret not in args.map_security:
+                abort(403)
+
         # Make sure IP isn't blacklisted.
         if self._ip_is_blacklisted(ip_addr):
             log.debug("Denied access to %s: blacklisted IP.", ip_addr)

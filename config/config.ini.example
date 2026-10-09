@@ -50,7 +50,7 @@
 #disable-blacklist              # Disable the global anti-scraper IP blacklist.
 #mapname:                       # Name for the map in the HTML view, default MerchantMap
 #map-provider:                  # Which map renderer to serve: 'google' or 'leaflet' (free, no API key). (default='google')
-
+#map-security:                  # Security token for the map to accept incoming data, default empty to allow all senders
 
 # Proxy settings
 ################
